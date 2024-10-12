@@ -35,16 +35,22 @@ int main(int argc, char *argv[]){
 	int num_consumer = atoi(argv[3]);
 
 	//2. Initialize buffer
-	printf("%d\n", pthread_mutex_init(&mutex,NULL));
-	printf("%d\n", sem_init(&empty,0,5));
-	printf("%d\n", sem_init(&full,0,0));
+	if(pthread_mutex_init(&mutex,NULL) == 0){
+		printf("mutex successfully initialized");
+	}
+	if(sem_init(&empty,0,5) == 0){
+		printf("mutex successfully initialized");
+	}
+	if(sem_init(&full,0,0) == 0){
+		printf("mutex successfully initialized");
+	}
 
 	int num = 100;
 	int num2 = 200;
 	sem_getvalue(&empty, &num);
-	printf("Empty semaphore is %d\n", num);
+	printf("Empty semaphore has %d\n open slots", num);
 	sem_getvalue(&full, &num2);
-	printf("Full semaphore is %d\n", num2);
+	printf("Full semaphore has %d\n occupied slots", num2);
 
 	srand(time(0));
 
