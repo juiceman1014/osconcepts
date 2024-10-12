@@ -36,21 +36,21 @@ int main(int argc, char *argv[]){
 
 	//2. Initialize buffer
 	if(pthread_mutex_init(&mutex,NULL) == 0){
-		printf("mutex successfully initialized");
+		printf("mutex successfully initialized\n");
 	}
 	if(sem_init(&empty,0,5) == 0){
-		printf("mutex successfully initialized");
+		printf("mutex successfully initialized\n");
 	}
 	if(sem_init(&full,0,0) == 0){
-		printf("mutex successfully initialized");
+		printf("mutex successfully initialized\n");
 	}
 
 	int num = 100;
 	int num2 = 200;
 	sem_getvalue(&empty, &num);
-	printf("Empty semaphore has %d\n open slots", num);
+	printf("Empty semaphore has %d open slots\n", num);
 	sem_getvalue(&full, &num2);
-	printf("Full semaphore has %d\n occupied slots", num2);
+	printf("Full semaphore has %d occupied slots\n", num2);
 
 	srand(time(0));
 
