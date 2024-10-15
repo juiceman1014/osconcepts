@@ -39,10 +39,10 @@ int main(int argc, char *argv[]){
 		printf("mutex successfully initialized\n");
 	}
 	if(sem_init(&empty,0,5) == 0){
-		printf("mutex successfully initialized\n");
+		printf("empty semaphore successfully initialized\n");
 	}
 	if(sem_init(&full,0,0) == 0){
-		printf("mutex successfully initialized\n");
+		printf("full semaphore successfully initialized\n");
 	}
 
 	int num = 100;
