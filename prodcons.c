@@ -74,6 +74,25 @@ int main(int argc, char *argv[]){
 	sleep(sleep_time);
 
 	//6. Exit
+	//cleanup semaphore and mutex
+	if(pthread_mutex_destroy(&mutex) != 0){
+		fprintf(stderr, "mutex destroy error\n");
+		return 1;
+	}else{
+		printf("mutex destroyed successfully\n");
+	}
+	if(sem_destroy(&empty) != 0){
+		fprintf(stderr, "empty semaphore destroy error\n");
+		return 1;
+	}else{
+		printf("empty semaphore destroyed successfully\n");
+	}
+	if(sem_destroy(&full) != 0){
+		fprintf(stderr, "full semaphore destroy error");
+	}else{
+		printf("full semaphore destroyed successfully");
+	}
+
 	return 0;
 }
 
