@@ -104,7 +104,7 @@ void *producer(void *param){
 	while(TRUE){
 		r = rand() % 5;
 		sleep(r);
-		item = rand() % 100;
+		item = rand();
 		if(insert_item(item) == -1){
 			fprintf(stderr, "Error Producing\n");
 		}
