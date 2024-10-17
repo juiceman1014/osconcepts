@@ -36,19 +36,25 @@ int main(int argc, char *argv[]){
 	int num_consumer = atoi(argv[3]);
 
 	//2. Initialize buffer
-	printf("%d\n", pthread_mutex_init(&mutex,NULL));
+	if(pthread_mutex_init(&mutex,NULL) != 0){
+		fprintf(stderr, "Mutex error\n");
+		return 1;
+	}else{
+		printf("Mutex successfully initialized\n");
+	}
+
 	if((empty = sem_open("/empty_sem", O_CREAT, 0644, 5)) == SEM_FAILED){
 		fprintf(stderr, "Empty error\n");
 		return 1;
 	}else{
-		printf("Empty success\n");
+		printf("Empty semaphore successfully initialized\n");
 	}
 
 	if((full = sem_open("/full_sem", O_CREAT, 0644, 0)) == SEM_FAILED){
 		fprintf(stderr, "Empty error\n");
 		return 1;
 	}else{
-		printf("Full success\n");
+		printf("Full semaphore successfully initialized\n");
 	}
 
 	srand(time(0));
@@ -69,10 +75,10 @@ int main(int argc, char *argv[]){
 		pthread_create(&tid,&attr,consumer,NULL);
 	}
 
-	printf("Sleeping now\n");
+	printf("Sleeping now\n\n");
 	//5. Sleep
 	sleep(sleep_time);
-	printf("Awake now\n");
+	printf("\nAwake now\n");
 	
 
 	//6. Exit

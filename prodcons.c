@@ -71,7 +71,9 @@ int main(int argc, char *argv[]){
 	}
 
 	//5. Sleep
+	printf("Sleeping now\n\n");
 	sleep(sleep_time);
+	printf("\nAwake now\n");
 
 	//6. Exit
 	//cleanup semaphore and mutex
