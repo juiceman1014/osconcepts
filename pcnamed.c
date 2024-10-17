@@ -78,11 +78,11 @@ int main(int argc, char *argv[]){
 	//6. Exit
 	//cleanup semaphores and mutex
 	if(pthread_mutex_destroy(&mutex) != 0){
-		fprintf(stderr, "mutex destroy error");
+		fprintf(stderr, "mutex destroy error\n");
 	}else{
-		printf("mutex destroyed successfully");
+		printf("mutex destroyed successfully\n");
 	}
-	
+
 	if(sem_close(empty) == -1){
 		fprintf(stderr, "Empty close error\n");
 		return 1;

@@ -88,9 +88,9 @@ int main(int argc, char *argv[]){
 		printf("empty semaphore destroyed successfully\n");
 	}
 	if(sem_destroy(&full) != 0){
-		fprintf(stderr, "full semaphore destroy error");
+		fprintf(stderr, "full semaphore destroy error\n");
 	}else{
-		printf("full semaphore destroyed successfully");
+		printf("full semaphore destroyed successfully\n");
 	}
 
 	return 0;
