@@ -152,21 +152,45 @@ void *consumer(void *param){
 }
 
 int insert_item(buffer_item item){
-	sem_wait(empty);
-	pthread_mutex_lock(&mutex);
+	if(sem_wait(empty) != 0){
+		fprintf(stderr, "sem wait error\n");
+		return -1;
+	}
+	if(pthread_mutex_lock(&mutex) != 0){
+		fprintf(stderr, "mutex lock error\n");
+		return -1;
+	}
 	buffer[insert_pointer++] = item;
 	insert_pointer = insert_pointer % 5;
-	pthread_mutex_unlock(&mutex);
-	sem_post(full);
+	if(pthread_mutex_unlock(&mutex) != 0){
+		fprintf(stderr, "mutex unlock error\n");
+		return -1;
+	}
+	if(sem_post(full) != 0){
+		fprintf(stderr, "sem post error\n");
+		return -1;
+	}
 	return 0;
 }
 
 int remove_item(buffer_item *item){
-	sem_wait(full);
-	pthread_mutex_lock(&mutex);
+	if(sem_wait(full) != 0){
+		fprintf(stderr, "sem wait error\n");
+		return -1;
+	}
+	if(pthread_mutex_lock(&mutex) != 0){
+		fprintf(stderr, "mutex lock error\n");
+		return -1;
+	}
 	*item = buffer[remove_pointer++];
 	remove_pointer = remove_pointer % 5;
-	pthread_mutex_unlock(&mutex);
-	sem_post(empty);
+	if(pthread_mutex_unlock(&mutex) != 0){
+		fprintf(stderr, "mutex unlock error\n");
+		return -1;
+	}
+	if(sem_post(empty) != 0){
+		fprintf(stderr, "sem post error\n");
+		return -1;
+	}
 	return 0;
 }
