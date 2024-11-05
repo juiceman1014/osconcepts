@@ -9,43 +9,53 @@
 int shared_array[SIZE];
 
 pthread_mutex_t mutex;
-pthread_mutex_t actions_mutex;
-pthread_cond_t cond;
+pthread_mutex_t print_mutex;
+pthread_cond_t cond_read;
+pthread_cond_t cond_write;
 
 int active_writers = 0;
 int active_readers = 0;
 int waiting_writers = 0;
+int waiting_readers = 0;
 int actions = 0;
-int priority = 0;
-int current_active_priority = 1;
+int queue_number = 0;
+int current_queue_number = 0;
 
 void *writer(void *params);
 void *reader(void *params);
 
 int main(int argc, char *argv[]){
-	pthread_mutex_init(&mutex, NULL);
-	pthread_cond_init(&cond, NULL);
-	pthread_mutex_init(&actions_mutex, NULL);
 
-	pthread_t workers[15];
+	pthread_mutex_init(&mutex, NULL);
+	pthread_mutex_init(&print_mutex, NULL);
+	pthread_cond_init(&cond_read, NULL);
+	pthread_cond_init(&cond_write, NULL);
+	
+	int readers = 15;
+	int writers = 8;
+	int total_threads = readers + writers;
+	pthread_t workers[total_threads];
 
 	srand(time(0));
 
-	for(int i = 0; i < 2; i++){
+	for(int i = 0; i < writers; i++){
 		pthread_create(&workers[i], NULL, &writer, NULL);
 	}
 
-	for(int i = 2; i < 15; i++){
+	for(int i = writers; i < total_threads; i++){
 		pthread_create(&workers[i], NULL, &reader, NULL);
 	}
 
-	for(int i = 0; i < 15; i++){
+	for(int i = 0; i < total_threads; i++){
 		pthread_join(workers[i], NULL);
 	}
 
+	printf("Total actions: %d\n", actions);
+
 	pthread_mutex_destroy(&mutex);
-	pthread_mutex_destroy(&actions_mutex);
-	pthread_cond_destroy(&cond);
+	pthread_mutex_destroy(&print_mutex);
+	pthread_cond_destroy(&cond_read);
+	pthread_cond_destroy(&cond_write);
 
 	return 0;
 }
@@ -54,98 +64,112 @@ void *writer(void *params){
 
 	while(TRUE){
 		int sleep_time = rand() % 5;
-		sleep(sleep_time);
+	    sleep(sleep_time);
 
-		pthread_mutex_lock(&actions_mutex);
-		if(actions>=100){
-			pthread_mutex_unlock(&actions_mutex);
+		pthread_mutex_lock(&mutex);
+
+		if(actions >= 100){
+			pthread_mutex_unlock(&mutex);
 			break;
 		}
 
-		pthread_mutex_lock(&mutex);
-		priority++;
-		int writer_priority = priority;
-		waiting_writers++;
-		while(active_readers > 0 || active_writers > 0 || writer_priority != current_active_priority){
-			pthread_cond_wait(&cond, &mutex);
+		int my_queue_number = queue_number;
+		queue_number++;
+
+		while((active_writers + active_readers) > 0 || my_queue_number != current_queue_number){
+			waiting_writers++;
 			printf("Writer waiting...\n");
-			printf("%d active readers %d active writers %d waiting writers\n", active_readers, active_writers, waiting_writers);
+			pthread_cond_wait(&cond_write, &mutex);
+			waiting_writers--;
 		}
 		active_writers++;
 		pthread_mutex_unlock(&mutex);
 
-		printf("\n");
-		printf("It's P%d's turn\n", priority);
-		pthread_mutex_lock(&mutex);
-		waiting_writers--;
-		pthread_mutex_unlock(&mutex);
+		pthread_mutex_lock(&print_mutex);
+		printf("\nQueue number %d's turn\n", current_queue_number);
+		printf("My queue number is %d\n", my_queue_number);
+		printf("%d active readers | ",active_readers);
+		printf("%d active writers | ",active_writers);
+		printf("%d waiting readers | ",waiting_readers);
+		printf("%d waiting writers\n",waiting_writers);
+		pthread_mutex_unlock(&print_mutex);
+	
 		for(int i = 0; i < 10; i++){
-			int val = rand() % 100;
-			shared_array[i] = val;
-			printf("%d active readers %d active writers %d waiting writers\n", active_readers, active_writers, waiting_writers);
-			printf("P%d Writer wrote: %d to index %d.\n", writer_priority, val, i);
-			sleep(1);
-			actions++;
-			printf("%d actions\n", actions);
-			if(actions == 100){
+			if(actions >= 100){
 				break;
 			}
+			int val = rand() % 100;
+			shared_array[i] = val;
+			actions++;
+			printf("Action %d - ", actions);
+			printf("Writer wrote: %d to index %d\n", val, i);
 		}
+
 		printf("\n");
-		pthread_mutex_unlock(&actions_mutex);
 
 		pthread_mutex_lock(&mutex);
 		active_writers--;
-		current_active_priority++;
-		pthread_cond_broadcast(&cond);
-		pthread_mutex_unlock(&mutex);
+		current_queue_number++;
+		if(waiting_writers > 0){
+			pthread_cond_signal(&cond_write);
+		}else if(waiting_readers > 0){
+			pthread_cond_broadcast(&cond_read);
+		}
 
+		pthread_mutex_unlock(&mutex);
 	}
 
 	pthread_exit(0);
+
 }
 
 void *reader(void *params){
 
 	while(TRUE){
-
 		int sleep_time = rand() % 5;
-		sleep(sleep_time);
-
-		pthread_mutex_lock(&actions_mutex);
-		if(actions>=100){
-			pthread_mutex_unlock(&actions_mutex);
-			break;
-		}	
+	    sleep(sleep_time);
 
 		pthread_mutex_lock(&mutex);
-		if(waiting_writers > 0){
-			pthread_cond_wait(&cond, &mutex);
-			printf("Reader waiting...\n");
+
+		if(actions >= 100){
+			pthread_mutex_unlock(&mutex);
+			break;
 		}
-		while(active_writers > 0){
-			pthread_cond_wait(&cond, &mutex);
+
+		while((active_writers + waiting_writers) > 0){
+			waiting_readers++;
 			printf("Reader waiting...\n");
+			pthread_cond_wait(&cond_read, &mutex);
+			waiting_readers--;
 		}
 		active_readers++;
 		pthread_mutex_unlock(&mutex);
 
-		printf("\n");
+		pthread_mutex_lock(&print_mutex);
+		printf("\n%d active readers | ",active_readers);
+		printf("%d active writers | ",active_writers);
+		printf("%d waiting readers | ",waiting_readers);
+		printf("%d waiting writers\n",waiting_writers);
+		pthread_mutex_unlock(&print_mutex);
+
+		if(actions >= 100){
+			break;
+		}
+
 		int val = rand() % 10;
-		printf("%d active readers %d active writers %d waiting writers\n", active_readers, active_writers, waiting_writers);
-		printf("Reader read: %d from index %d.\n", shared_array[val], val);
-		sleep(1);
-
 		actions++;
-		printf("%d actions\n\n", actions);
-		pthread_mutex_unlock(&actions_mutex);
-
+		printf("Action %d - ", actions);
+		printf("Reader read: %d from index %d\n\n", shared_array[val], val);
+		
 		pthread_mutex_lock(&mutex);
 		active_readers--;
-		pthread_cond_broadcast(&cond);
-		pthread_mutex_unlock(&mutex);
+		if(active_readers == 0 && waiting_writers > 0){
+			pthread_cond_signal(&cond_write);
+		}
 
+		pthread_mutex_unlock(&mutex);
 	}
 
 	pthread_exit(0);
+	
 }
