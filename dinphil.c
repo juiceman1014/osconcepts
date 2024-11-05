@@ -32,19 +32,20 @@ int right_neighbor(int number){
 
 void test(int i){
 	if((state[left_neightbor(i)] != EATING) && (state[i] == HUNGRY) && (state[right_neighbor(i)] !+ EATING)) {
-		state[i] = EATING;
-		pthread_cond_signal(&cond_vars[i]);
+		state[i] = EATING;	//set philosopher i's state to eating
+		pthread_cond_signal(&cond_vars[i]); //signal philospher i to start eating
 	}
 }
 
 void pickup_forks(int number){
 	pthread_mutex_lock(&mutex_lock);
 
-	state[number] = HUNGRY;
-	test(number);
+	state[number] = HUNGRY;	//set philosopher state to hungry
+	test(number); 	//check if philosopher can start eating
 
+	//wait if philosopher can not eat
 	while(state[number] != EATING){
-		pthread_cond_wait(&cond_vars[number], &mutex_lock);
+		pthread_cond_wait(&cond_vars[number], &mutex_lock); //wait for signal to start eating
 	}
 
 	pthread_mutex_unlock(&mutex_lock);
@@ -69,7 +70,7 @@ void thinking(int sleep_time){
 }
 
 void *philosopher(void *param){
-	int *lnumber = (int *) param;
+	int *lnumber = (int *) param; //get philosopher number
 	int number = *lnumber;
 	int sleep_time;
 	int times_through_loop = 0;
@@ -78,9 +79,9 @@ void *philosopher(void *param){
 
 	while(times_through_loop<5){
 		sleep_time = (int)((random() % MAX_SLEEP_TIME + 1));
-		thinking(sleep_time);
+		thinking(sleep_time);	//philosopher starts by thinkign
 
-		pickup_forks(number);
+		pickup_forks(number);	//attempt to pick up forks
 
 		printf("Philosopher %d is eating\n",number);
                 printf(" left is ");
