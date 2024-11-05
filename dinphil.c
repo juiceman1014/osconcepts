@@ -83,7 +83,7 @@ void *philosopher(void *param){
 
 		pickup_forks(number);	//attempt to pick up forks
 
-		printf("Philosopher %d is eating\n",number);
+		printf("Philosopher %d is eating\n",number);	//if pickup forks is successful, that means philosopher is eating
                 printf(" left is ");
                 if (state[left_neighbor(number)] == THINKING)
                     printf("THINKING");
@@ -101,9 +101,9 @@ void *philosopher(void *param){
                     printf("EATING");
 
         sleep_time = (int)((random() % MAX_SLEEP_TIME) +1);
-        eating(sleep_time);
+        eating(sleep_time);	//eating time
 
-        printf("Philosopher %d is thinking\n",number);
+        printf("Philosopher %d is thinking\n",number);	//phil is done eating and now must think
 		return_forks(number);
 		
 		++times_through_loop;
